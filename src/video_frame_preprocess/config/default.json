@@ -1,0 +1,13 @@
+{
+  "input_dir": "input",
+  "output_dir": "outputs",
+  "selection": "quality_filter",
+  "scan_fps": 0,
+  "sharpness_quantile": 0.10,
+  "max_drop_ratio": 0.08,
+  "max_consecutive_drops": 2,
+  "min_gap": 1,
+  "image_ext": "jpg",
+  "jpg_quality": 95,
+  "write_filtered_video": true
+}

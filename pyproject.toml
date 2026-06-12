@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "video-frame-preprocess"
+version = "0.1.0"
+description = "Extract and filter clean video frames for point-cloud reconstruction workflows."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+  {name = "LingBot Map Contributors"}
+]
+keywords = [
+  "video-preprocessing",
+  "frame-extraction",
+  "point-cloud",
+  "photogrammetry",
+  "reconstruction",
+  "quality-filtering",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = [
+  "numpy>=1.26,<2.0",
+  "opencv-python>=4.8,<4.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/Taiquan-Zhou/video-frame-preprocess"
+Source = "https://github.com/Taiquan-Zhou/video-frame-preprocess"
+Issues = "https://github.com/Taiquan-Zhou/video-frame-preprocess/issues"
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+]
+dev = [
+  "build",
+  "mypy",
+  "pre-commit",
+  "pytest",
+  "ruff",
+]
+
+[project.scripts]
+video-frame-preprocess = "video_frame_preprocess.cli:main"
+video-frame-preprocess-batch = "video_frame_preprocess.batch:main"
+video-frame-preprocess-demo = "video_frame_preprocess.demo:main"
+video-frame-preprocess-health = "video_frame_preprocess.health:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+video_frame_preprocess = ["config/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true
+files = ["src"]
