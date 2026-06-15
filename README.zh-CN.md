@@ -2,19 +2,30 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-`video-frame-preprocess` 是一个独立的本地 Python package，用于把原始巡检视频转换成可供后续点云建模流程使用的干净帧序列。
+`video-frame-preprocess` 是一个独立的视频预处理工具，用于点云重建工作流。它从原始巡检视频中抽取帧，过滤明显低质量帧，并输出可复现、可审计的报告，供后续帧时序优化和建模使用。
 
-它只负责视频前处理：抽帧、质量评估、模糊/曝光/对比度过滤、保守丢帧控制和本地报告输出。它不负责静止段删帧、快速移动段补帧、重建训练、上传数据或修改图像内容。
+它位于 `frame-timing-skill` 之前：
+
+```text
+raw video
+  -> video-frame-preprocess
+  -> clean_frames/
+  -> frame-timing-skill
+  -> modeling-ready frames
+  -> reconstruction
+```
 
 ## 功能
 
 - 处理单个视频或视频目录。
-- 支持全帧扫描或按 `--scan_fps` 采样扫描。
-- 使用清晰度、亮度和对比度过滤明显低质量帧。
-- 用 `--max_drop_ratio` 和 `--max_consecutive_drops` 控制过度丢帧风险。
+- 支持全帧抽取，也支持通过 `--scan_fps` 采样扫描。
+- 基于清晰度、亮度和对比度过滤低质量帧。
+- 通过 `--max_drop_ratio` 和 `--max_consecutive_drops` 限制过度丢帧。
 - 输出干净帧、manifest、质量报告、摘要和可选过滤后视频。
-- 提供 `video-frame-preprocess-health` 检查输出产物完整性。
-- 提供 `video-frame-preprocess-demo` 生成确定性 demo 视频。
+- 使用 `video-frame-preprocess-health` 校验输出产物。
+- 使用 `video-frame-preprocess-demo` 生成确定性 demo 视频。
+
+本项目不处理静止段删帧、快速移动段重复帧等帧时序策略；这些步骤属于 `frame-timing-skill`。
 
 ## 安装
 
@@ -51,13 +62,15 @@ video-frame-preprocess \
   --clean
 ```
 
+使用 `--scan_fps 0` 可以在质量过滤前检查每个源视频帧。
+
 ## 批处理
 
 ```bash
 video-frame-preprocess-batch --config src/video_frame_preprocess/config/default.json
 ```
 
-默认配置读取 `input/` 下的视频，输出到 `outputs/`。
+默认配置从 `input/` 读取视频，并将结果写入 `outputs/`。
 
 ## 健康检查
 
@@ -71,17 +84,17 @@ video-frame-preprocess-health outputs/demo_clear_frames
 video-frame-preprocess-health outputs/demo_clear_frames --json
 ```
 
-健康检查会确认：
+健康检查通过表示：
 
 - 必需报告文件存在；
 - `selected_frames.txt` schema 正确；
-- 每个选中帧文件存在；
-- `summary.json`、`run_manifest.json`、实际图像文件和 selected frame 记录数量一致；
-- `selected_frames.txt` 中的 `sha256` 和输出图像字节一致。
+- 每个选中输出帧都存在；
+- `selected_frames.txt`、`summary.json`、`run_manifest.json` 和实际图像文件中的帧数量一致；
+- 记录的 `sha256` 与输出图像字节一致。
 
 ## 输出
 
-核心输出目录：
+下游安全使用的核心产物是帧目录：
 
 ```text
 outputs/<video_stem>_clear_frames/
@@ -92,29 +105,26 @@ outputs/<video_stem>_clear_frames/
   summary.json
 ```
 
-下游建模默认只消费 `frame_*` 图像序列。报告文件用于审计和排查。
+默认只把清洗后的 `frame_*` 图像交给重建流程。报告文件用于审计和排查。
 
-统计字段会区分采样和质量过滤：
+## 统计字段
 
-- `source_frames`：源视频总帧数；
-- `analyzed_candidates`：实际分析的候选帧数量；
-- `selected_frames`：写出的干净帧数量；
-- `quality_dropped_candidates` / `dropped_frames`：已分析候选帧中被质量过滤丢弃的数量；
+`run_manifest.json` 和 `summary.json` 会区分采样和质量过滤：
+
+- `source_frames`：源视频报告的总帧数；
+- `analyzed_candidates`：经过 `--scan_fps` 或 `--max_frames` 后实际分析的帧；
+- `selected_frames`：写入干净帧序列的帧；
+- `quality_dropped_candidates` / `dropped_frames`：质量过滤丢弃的已分析候选帧；
 - `sampling_skipped_frames`：因为采样或帧数上限未分析的源视频帧；
 - `retention_ratio`：`selected_frames / analyzed_candidates`；
 - `source_retention_ratio`：`selected_frames / source_frames`。
 
-## 与 frame-timing-skill 的关系
+## 开发检查
 
-推荐链路：
-
-```text
-raw video
-  -> video-frame-preprocess
-  -> clean_frames
-  -> frame-timing-skill
-  -> modeling-ready frames
-  -> reconstruction
+```bash
+python -m pytest -q
+python -m ruff check .
+python -m mypy src
+python -m compileall -q src tests
+python -m build
 ```
-
-`frame-timing-skill` 应消费本项目输出的干净帧目录。静止段删帧、快速移动段重复帧和 timing strategy 不属于本项目。
