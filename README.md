@@ -17,9 +17,15 @@ It does not delete static sections, duplicate fast-motion frames, run reconstruc
 
 ## For Users
 
-### Use As An Agent Skill
+### Use as an Agent Skill
 
-Ask your AI coding agent to use this repository before `frame-timing-skill` when the input is raw video:
+Ask your AI coding agent to install and use this repository before `frame-timing-skill` when the input is raw video:
+
+```text
+Install this skill: https://github.com/Taiquan-Zhou/video-frame-preprocess
+```
+
+Then run it on your video:
 
 ```text
 Use video-frame-preprocess on path/to/raw_video.mp4.

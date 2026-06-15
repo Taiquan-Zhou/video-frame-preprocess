@@ -2,31 +2,37 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-Video Frame Preprocess 是一个本地 Python 包，也可以作为 Agent 友好的视频预处理步骤使用。它用于把原始巡检视频转换成干净帧序列，位于 `frame-timing-skill` 之前：本项目负责抽帧和质量过滤，`frame-timing-skill` 后续负责帧时序调整。
+Video Frame Preprocess 是一个本地 Python 包，也是 Agent 友好的预处理步骤，用于把原始巡检视频转换成干净帧序列。它位于 `frame-timing-skill` 之前：本项目负责抽帧和质量过滤，`frame-timing-skill` 后续负责帧时序调整。
 
-它不做静止段删帧、快速移动段补帧、重建训练、上传数据，也不修改图像内容。
+它不删除静止段、不重复快速移动段帧、不执行重建、不上传数据，也不会修改图像内容，只会写出解码后的输出帧。
 
 ## 功能
 
 - 从单个视频或视频目录抽帧。
-- 基于清晰度、亮度、对比度过滤明显低质量帧。
-- 用丢帧比例和连续丢帧限制保持保守过滤。
-- 输出干净帧、manifest、质量报告、摘要和可选过滤后视频。
+- 基于清晰度、亮度和对比度过滤明显低质量帧。
+- 用丢帧比例和连续丢帧保护保持保守过滤。
+- 输出干净帧、manifest、报告、摘要和可选过滤后视频。
 - 使用 `video-frame-preprocess-health` 校验输出产物。
 - 使用 `video-frame-preprocess-demo` 生成确定性 demo 视频。
 
 ## For Users
 
-### 作为 Agent Skill 使用
+### Use as an Agent Skill
 
-当输入是原始视频时，让你的 AI coding agent 在 `frame-timing-skill` 之前使用这个仓库：
+当输入是原始视频时，让你的 AI coding agent 在 `frame-timing-skill` 之前安装并使用这个仓库：
+
+```text
+Install this skill: https://github.com/Taiquan-Zhou/video-frame-preprocess
+```
+
+然后对视频运行：
 
 ```text
 Use video-frame-preprocess on path/to/raw_video.mp4.
 Then pass the clean frame directory to frame-timing-skill.
 ```
 
-推荐链路：
+推荐流程：
 
 ```text
 raw video -> video-frame-preprocess -> clean_frames -> frame-timing-skill -> reconstruction-ready frames
@@ -34,7 +40,7 @@ raw video -> video-frame-preprocess -> clean_frames -> frame-timing-skill -> rec
 
 ## For Developers
 
-### 安装 Python 包
+### Install Python Package
 
 ```bash
 python -m pip install git+https://github.com/Taiquan-Zhou/video-frame-preprocess.git
@@ -46,7 +52,7 @@ python -m pip install git+https://github.com/Taiquan-Zhou/video-frame-preprocess
 python -m pip install -e ".[dev]"
 ```
 
-### CLI 用法
+### CLI Usage
 
 生成 demo 视频：
 
@@ -78,9 +84,9 @@ video-frame-preprocess-health outputs/demo_clear_frames
 video-frame-preprocess-batch --config src/video_frame_preprocess/config/default.json
 ```
 
-## 输出契约
+## Output Contract
 
-下游安全使用的核心产物是干净帧目录：
+下游安全使用的产物是干净帧目录：
 
 ```text
 outputs/<video_stem>_clear_frames/
@@ -91,9 +97,9 @@ outputs/<video_stem>_clear_frames/
   summary.json
 ```
 
-默认只把 `frame_*` 图像交给下游重建流程。报告文件用于审计和排查。`selected_frames.txt` 包含 `sha256`，`video-frame-preprocess-health` 会校验输出图像字节是否一致。
+默认只把 `frame_*` 图像交给下游重建流程。报告文件用于审计和排查。`selected_frames.txt` 包含 `sha256`，`video-frame-preprocess-health` 会校验输出图像字节。
 
-## 开发检查
+## Development Checks
 
 ```bash
 python -m pytest -q
